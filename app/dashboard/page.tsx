@@ -56,7 +56,7 @@ export default async function AdminDashboard() {
         {/* 📈 Stats Grid (High Contrast) */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
           <div className="bg-white p-6 rounded-2xl shadow-sm border-b-4 border-blue-500">
-            <p className="text-xs text-gray-400 font-black uppercase tracking-widest">Total Revenue</p>
+            <p className="text-xs text-gray-400 font-black uppercase tracking-widest">Total Sales</p>
             <p className="text-3xl font-black text-gray-900 mt-1">₹{settledRevenue.toLocaleString()}</p>
           </div>
           <div className="bg-white p-6 rounded-2xl shadow-sm border-b-4 border-emerald-500">
