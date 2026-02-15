@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> } // 👈 1. Type ko Promise banao
 ) {
   const session = await getServerSession(authOptions);
 
@@ -17,9 +17,12 @@ export async function DELETE(
   }
 
   try {
+    const { id } = await params; // 👈 2. params ko await karo
+
     await prisma.product.delete({
-      where: { id: params.id },
+      where: { id: id }, // 👈 3. params.id ki jagah sirf id use karo
     });
+    
     return NextResponse.json({ message: "Product Deleted ✅" });
   } catch (error) {
     return NextResponse.json({ message: "Error deleting product" }, { status: 500 });
