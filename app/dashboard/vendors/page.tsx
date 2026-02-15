@@ -3,11 +3,12 @@
 import { useState, useEffect } from "react";
 
 export default function VendorsPage() {
-  const [vendors, setVendors] = useState([]);
+  // 👈 Fix: Yahan <any[]> add kiya hai taaki 'never[]' error na aaye
+  const [vendors, setVendors] = useState<any[]>([]); 
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [loading, setLoading] = useState(false);
 
-  // 1. Vendors Load Karo (GET logic same rahega)
+  // 1. Vendors Load Karo
   useEffect(() => {
     fetch("/api/vendors")
       .then((res) => res.json())
@@ -17,13 +18,13 @@ export default function VendorsPage() {
       .catch((err) => console.error("Error loading vendors:", err));
   }, []);
 
-  // 2. 🛡️ Status Toggle Logic (Fix: Using Dynamic Route)
+  // 2. 🛡️ Status Toggle Logic
   const handleToggle = async (id: string, field: string, currentValue: boolean) => {
-    // 👇 URL updated to match your backend: /api/admin/vendors/[id]
+    // API path ko backend ke logic se sync rakho
     const res = await fetch(`/api/admin/vendors/${id}`, { 
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ [field]: !currentValue }), // Sirf field bhejni hai, ID URL mein hai
+      body: JSON.stringify({ [field]: !currentValue }), 
     });
 
     if (res.ok) {
@@ -31,11 +32,9 @@ export default function VendorsPage() {
         v.id === id ? { ...v, [field]: !currentValue } : v
       ));
     } else {
-      // Agar error aaye toh alert dikhao (cite: image_d3d87e.jpg)
-      alert("Failed to update status ❌ - Path check karo!");
+      alert("Failed to update status ❌ - Backend path check karo!");
     }
   };
-
   // 3. Naya Vendor Add Karo
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
