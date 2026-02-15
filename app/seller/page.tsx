@@ -25,11 +25,17 @@ export default async function SellerDashboard() {
     orderBy: { createdAt: "desc" },
   });
 
-  const sales = await prisma.orderItem.findMany({
-    where: { product: { sellerId: sellerId } },
+ const sales = await prisma.orderItem.findMany({
+    where: { 
+      product: { sellerId: sellerId } 
+    },
     include: {
-      product: true,
-      order: { include: { user: true } }
+      product: {
+        include: { seller: true } 
+      },
+      order: { 
+        include: { user: true } 
+      }
     },
     orderBy: { order: { createdAt: "desc" } }
   });
