@@ -1,55 +1,50 @@
-export const dynamic = "force-dynamic"; // ✅ Har baar fresh data fetch karega
+export const dynamic = "force-dynamic";
 
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma"; // ✅ Singleton Prisma
+import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import SalesChart from "../../components/SalesChart";
-import StatusDropdown from "../../components/StatusDropdown"; // ✅ Component import
+import StatusDropdown from "../../components/StatusDropdown";
 
 export default async function SellerDashboard() {
   const session = await getServerSession(authOptions);
   
-  // 🛡️ Auth Check
   if (!session || (session.user as any).role !== "SELLER") {
     redirect("/login");
   }
 
   const sellerId = (session.user as any).id;
 
-  // 1. Fetch Seller's Products
   const myProducts = await prisma.product.findMany({
     where: { sellerId },
     orderBy: { createdAt: "desc" },
   });
 
-  // 2. Fetch Orders (Jo items is seller ke bike hain)
   const sales = await prisma.orderItem.findMany({
-    where: {
-      product: { sellerId: sellerId }
-    },
+    where: { product: { sellerId: sellerId } },
     include: {
       product: true,
-      order: {
-        include: { user: true }
-      }
+      order: { include: { user: true } }
     },
     orderBy: { order: { createdAt: "desc" } }
   });
 
-  // 3. Calculate Total Revenue
-  const totalRevenue = sales.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  // ✅ FIXED: Sirf "DELIVERED" status wale items ki earnings count hogi
+  const totalRevenue = sales
+    .filter((sale) => sale.order.status === "DELIVERED") // 👈 Ye filter zaroori hai
+    .reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
   return (
     <div className="min-h-screen bg-gray-50 p-8 text-gray-900">
       <div className="max-w-6xl mx-auto">
         
-        {/* Header Section */}
+        {/* Header */}
         <div className="flex justify-between items-center mb-10">
           <div>
-            <h1 className="text-4xl font-black tracking-tight">Seller Hub 🏪</h1>
-            <p className="text-gray-500 font-medium">Welcome back, <span className="text-blue-600 font-bold">{session.user?.name}</span></p>
+            <h1 className="text-4xl font-black tracking-tight text-gray-900">Seller Hub 🏪</h1>
+            <p className="text-gray-500 font-medium italic">Dashboard for <span className="text-blue-600 font-bold">{session.user?.name}</span></p>
           </div>
           <Link href="/seller/new-product">
             <button className="bg-blue-600 text-white px-8 py-3 rounded-2xl shadow-xl shadow-blue-100 hover:bg-blue-700 transition-all font-black">
@@ -65,47 +60,41 @@ export default async function SellerDashboard() {
             <p className="text-5xl font-black mt-2">{myProducts.length}</p>
           </div>
           <div className="bg-white p-8 rounded-3xl shadow-sm border-b-4 border-emerald-500">
-            <h3 className="text-gray-400 text-xs font-black uppercase tracking-widest">Total Earnings</h3>
+            <h3 className="text-gray-400 text-xs font-black uppercase tracking-widest">Settled Earnings (Delivered)</h3>
             <p className="text-5xl font-black text-emerald-600 mt-2">₹{totalRevenue.toLocaleString()}</p>
           </div>
         </div>
 
-        {/* Performance Chart */}
-        <div className="bg-white p-8 rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 mb-12">
-          <h3 className="text-xl font-black mb-6">Weekly Performance 📈</h3>
-          <SalesChart />
-        </div>
-
-        {/* Recent Sales Section */}
+        {/* Recent Sales Table */}
         <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 overflow-hidden mb-12 border border-gray-100">
-          <div className="p-6 border-b bg-gray-50/50 flex justify-between items-center">
-            <h3 className="text-xl font-black">📦 Recent Sales</h3>
-            <span className="text-[10px] font-black bg-blue-100 text-blue-700 px-3 py-1 rounded-full uppercase">Live Updates</span>
+          <div className="p-6 border-b bg-gray-50/50 flex justify-between items-center text-gray-900">
+            <h3 className="text-xl font-black">📦 Recent Sales Activity</h3>
+            <span className="text-[10px] font-black bg-blue-100 text-blue-700 px-3 py-1 rounded-full uppercase">All Statuses</span>
           </div>
           
           <table className="w-full text-left">
             <thead className="bg-gray-50/50 border-b">
               <tr>
-                <th className="p-5 text-[10px] font-black text-gray-400 uppercase">Product Name</th>
+                <th className="p-5 text-[10px] font-black text-gray-400 uppercase">Product</th>
                 <th className="p-5 text-[10px] font-black text-gray-400 uppercase">Buyer</th>
                 <th className="p-5 text-[10px] font-black text-gray-400 uppercase text-center">Qty</th>
-                <th className="p-5 text-[10px] font-black text-gray-400 uppercase">Revenue</th>
+                <th className="p-5 text-[10px] font-black text-gray-400 uppercase text-center">Revenue</th>
                 <th className="p-5 text-[10px] font-black text-gray-400 uppercase">Status</th>
                 <th className="p-5 text-[10px] font-black text-gray-400 uppercase text-right">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {sales.map((sale) => (
-                <tr key={sale.id} className="hover:bg-blue-50/20 transition">
-                  <td className="p-5 font-black text-sm">{sale.product.name}</td>
+                <tr key={sale.id} className="hover:bg-blue-50/20 transition group">
+                  <td className="p-5 font-black text-gray-900 text-sm">{sale.product.name}</td>
                   <td className="p-5">
                     <p className="text-sm font-bold text-gray-800">{sale.order.user.name}</p>
-                    <p className="text-[10px] text-gray-400">{sale.order.user.email}</p>
+                    <p className="text-[10px] text-gray-400 font-medium">{sale.order.user.email}</p>
                   </td>
                   <td className="p-5 text-center font-black text-gray-700">{sale.quantity}</td>
-                  <td className="p-5 font-black text-emerald-600">₹{(sale.price * sale.quantity).toLocaleString()}</td>
+                  <td className="p-5 text-center font-black text-emerald-600">₹{sale.price * sale.quantity}</td>
                   
-                  {/* ✅ DYNAMIC STATUS BADGE: Ab color status ke hisaab se badlega */}
+                  {/* Status Badge */}
                   <td className="p-5">
                     <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase border ${
                       sale.order.status === "PENDING" ? "bg-yellow-50 text-yellow-700 border-yellow-100" :
@@ -117,7 +106,6 @@ export default async function SellerDashboard() {
                     </span>
                   </td>
 
-                  {/* ✅ STATUS DROPDOWN: Action button jo status update karega */}
                   <td className="p-5 text-right">
                     <StatusDropdown orderId={sale.order.id} currentStatus={sale.order.status} />
                   </td>
@@ -127,8 +115,8 @@ export default async function SellerDashboard() {
           </table>
         </div>
 
-        {/* Inventory Section */}
-        <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+        {/* Inventory Section remains same */}
+          <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
           <div className="p-6 border-b"><h3 className="text-xl font-black">Your Inventory</h3></div>
           <table className="w-full text-left">
             <tbody className="divide-y divide-gray-50">
@@ -143,7 +131,6 @@ export default async function SellerDashboard() {
             </tbody>
           </table>
         </div>
-
       </div>
     </div>
   );
