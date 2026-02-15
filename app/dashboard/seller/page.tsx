@@ -70,19 +70,19 @@ export default async function SellerOrders() {
 
                 {/* 4. Database Status Badge */}
                 <td className="p-5">
-                  <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${
-                    order.status === "PENDING" ? "bg-yellow-50 text-yellow-700 border border-yellow-100" :
-                    order.status === "DELIVERED" ? "bg-green-50 text-green-700 border border-green-100" :
-                    "bg-blue-50 text-blue-700 border border-blue-100"
-                  }`}>
-                    {order.status}
-                  </span>
-                </td>
+        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase border ${
+          order.status === "PENDING" ? "bg-yellow-50 text-yellow-700 border-yellow-100" :
+          order.status === "DELIVERED" ? "bg-green-50 text-green-700 border-green-100" :
+          "bg-blue-50 text-blue-700 border-blue-100"
+        }`}>
+          {order.status} {/* 👈 "SOLD" ki jagah ye database wala status dikhayega */}
+        </span>
+      </td>
 
-                {/* 5. Action Dropdown */}
-                <td className="p-5 text-right">
-                  <StatusDropdown orderId={order.id} currentStatus={order.status} />
-                </td>
+      {/* 👇 YAHAN DROPDOWN DALO: Taaki vendor status badal sake */}
+      <td className="p-5 text-right">
+        <StatusDropdown orderId={order.id} currentStatus={order.status} />
+      </td>
               </tr>
             ))}
           </tbody>
