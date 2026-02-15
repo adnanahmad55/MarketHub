@@ -61,6 +61,15 @@ export default async function SellerOrders() {
                 <td className="p-5 font-black text-gray-900">
                   ₹{order.total.toLocaleString()}
                 </td>
+                <td className="p-5">
+      <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${
+        order.status === "PENDING" ? "bg-yellow-50 text-yellow-700" :
+        order.status === "DELIVERED" ? "bg-green-50 text-green-700" :
+        "bg-blue-50 text-blue-700"
+      }`}>
+        {order.status} {/* 👈 Ab ye database wala status dikhayega */}
+      </span>
+    </td>
                 <td className="p-5 text-right">
                   {/* Status Dropdown jo database update karega */}
                   <StatusDropdown orderId={order.id} currentStatus={order.status} />

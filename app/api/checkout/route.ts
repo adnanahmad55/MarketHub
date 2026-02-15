@@ -31,20 +31,20 @@ export async function POST(req: Request) {
     // 2. ⚡ TRANSACTION (Saara kaam ek saath hoga, ya kuch nahi hoga)
     const result = await prisma.$transaction(async (tx) => {
       // Order Create Karo
-      const order = await tx.order.create({
-        data: {
-          userId: (session.user as any).id,
-          total: totalAmount,
-          status: "COMPLETED",
-          items: {
-            create: cartItems.map((item: any) => ({
-              productId: item.id,
-              quantity: item.quantity,
-              price: item.price,
-            })),
-          },
-        },
-      });
+ const order = await tx.order.create({
+  data: {
+    userId: (session.user as any).id,
+    total: totalAmount,
+    status: "PENDING", // 👈 "COMPLETED" hata kar "PENDING" karo
+    items: {
+      create: cartItems.map((item: any) => ({
+        productId: item.id,
+        quantity: item.quantity,
+        price: item.price,
+      })),
+    },
+  },
+});
 
       // Stock Deduct Karo
       for (const item of cartItems) {
