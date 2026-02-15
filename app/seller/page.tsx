@@ -1,22 +1,25 @@
-export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic"; // ✅ Fresh data ensure karega
 
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma"; // ✅ Singleton prisma
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import SalesChart from "../../components/SalesChart";
 import StatusDropdown from "../../components/StatusDropdown";
+import ReportButton from "@/components/ReportButton"; // 👈 YE MISSING THA, ise add kar diya hai
 
 export default async function SellerDashboard() {
   const session = await getServerSession(authOptions);
   
+  // 🛡️ Security Check
   if (!session || (session.user as any).role !== "SELLER") {
     redirect("/login");
   }
 
   const sellerId = (session.user as any).id;
 
+  // 📦 Data Fetching
   const myProducts = await prisma.product.findMany({
     where: { sellerId },
     orderBy: { createdAt: "desc" },
@@ -31,36 +34,41 @@ export default async function SellerDashboard() {
     orderBy: { order: { createdAt: "desc" } }
   });
 
-  // ✅ FIXED: Sirf "DELIVERED" status wale items ki earnings count hogi
+  // 💰 Earnings Logic: Sirf "DELIVERED" count hoga
   const totalRevenue = sales
-    .filter((sale) => sale.order.status === "DELIVERED") // 👈 Ye filter zaroori hai
+    .filter((sale) => sale.order.status === "DELIVERED")
     .reduce((sum, item) => sum + (item.price * item.quantity), 0);
  
-  // PDF Report ke liye stats prepare karo
+  // 📄 PDF Report Stats
   const sellerReportStats = {
     totalRevenue: totalRevenue,
     totalOrders: sales.length,
-    sellerName: session.user?.name // Extra info for PDF
-  };  
+    sellerName: session.user?.name 
+  };   
 
   return (
     <div className="min-h-screen bg-gray-50 p-8 text-gray-900">
       <div className="max-w-6xl mx-auto">
         
-        {/* Header */}
+        {/* 🏪 Header Section */}
         <div className="flex justify-between items-center mb-10">
           <div>
             <h1 className="text-4xl font-black tracking-tight text-gray-900">Seller Hub 🏪</h1>
-            <p className="text-gray-500 font-medium italic">Dashboard for <span className="text-blue-600 font-bold">{session.user?.name}</span></p>
+            <p className="text-gray-500 font-medium italic">Welcome back, <span className="text-blue-600 font-bold">{session.user?.name}</span></p>
           </div>
-          <Link href="/seller/new-product">
-            <button className="bg-blue-600 text-white px-8 py-3 rounded-2xl shadow-xl shadow-blue-100 hover:bg-blue-700 transition-all font-black">
-              + Add New Product
-            </button>
-          </Link>
+          <div className="flex gap-4">
+            {/* ✅ Report Button for PDF Download */}
+            <ReportButton allSalesData={sales} stats={sellerReportStats} />
+            
+            <Link href="/seller/new-product">
+              <button className="bg-blue-600 text-white px-8 py-3 rounded-2xl shadow-xl shadow-blue-100 hover:bg-blue-700 transition-all font-black">
+                + Add New Product
+              </button>
+            </Link>
+          </div>
         </div>
 
-        {/* Stats Cards */}
+        {/* 📊 Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
           <div className="bg-white p-8 rounded-3xl shadow-sm border-b-4 border-blue-500">
             <h3 className="text-gray-400 text-xs font-black uppercase tracking-widest">Active Inventory</h3>
@@ -72,11 +80,11 @@ export default async function SellerDashboard() {
           </div>
         </div>
 
-        {/* Recent Sales Table */}
+        {/* 📦 Recent Sales Table */}
         <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 overflow-hidden mb-12 border border-gray-100">
           <div className="p-6 border-b bg-gray-50/50 flex justify-between items-center text-gray-900">
             <h3 className="text-xl font-black">📦 Recent Sales Activity</h3>
-            <span className="text-[10px] font-black bg-blue-100 text-blue-700 px-3 py-1 rounded-full uppercase">All Statuses</span>
+            <span className="text-[10px] font-black bg-blue-100 text-blue-700 px-3 py-1 rounded-full uppercase">Live Status</span>
           </div>
           
           <table className="w-full text-left">
@@ -99,9 +107,9 @@ export default async function SellerDashboard() {
                     <p className="text-[10px] text-gray-400 font-medium">{sale.order.user.email}</p>
                   </td>
                   <td className="p-5 text-center font-black text-gray-700">{sale.quantity}</td>
-                  <td className="p-5 text-center font-black text-emerald-600">₹{sale.price * sale.quantity}</td>
+                  <td className="p-5 text-center font-black text-emerald-600 text-lg">₹{sale.price * sale.quantity}</td>
                   
-                  {/* Status Badge */}
+                  {/* Dynamic Status Badge */}
                   <td className="p-5">
                     <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase border ${
                       sale.order.status === "PENDING" ? "bg-yellow-50 text-yellow-700 border-yellow-100" :
@@ -122,17 +130,17 @@ export default async function SellerDashboard() {
           </table>
         </div>
 
-        {/* Inventory Section remains same */}
-          <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+        {/* 🛒 Inventory Section */}
+        <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
           <div className="p-6 border-b"><h3 className="text-xl font-black">Your Inventory</h3></div>
           <table className="w-full text-left">
             <tbody className="divide-y divide-gray-50">
               {myProducts.map((product) => (
-                <tr key={product.id}>
+                <tr key={product.id} className="hover:bg-gray-50 transition">
                   <td className="p-5"><img src={product.images[0]} className="w-12 h-12 rounded-xl object-cover" alt={product.name}/></td>
                   <td className="p-5 font-black">{product.name}</td>
                   <td className="p-5 text-emerald-600 font-black">₹{product.price.toLocaleString()}</td>
-                  <td className="p-5 text-right font-bold text-xs">{product.stock} left</td>
+                  <td className="p-5 text-right font-bold text-xs">{product.stock} units left</td>
                 </tr>
               ))}
             </tbody>
