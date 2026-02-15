@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import Image from "next/image";
 import DeleteProductButton from "../../../components/DeleteProductButton"; 
-
+export const dynamic = "force-dynamic";
 const prisma = new PrismaClient();
 
 export default async function AllProductsPage() {
