@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
+// 👈 Naye imports jo missing thhe
+import { getServerSession } from "next-auth"; 
+import { authOptions } from "@/lib/auth"; 
 
 const prisma = new PrismaClient();
 
@@ -20,23 +23,19 @@ export async function GET() {
 // POST: Naya Vendor Create Karo
 export async function POST(req: Request) {
   try {
-    const { name, email, password, shopName } = await req.json();
+    const { name, email, password } = await req.json();
 
-    // Check existing
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) return NextResponse.json({ message: "Email already exists" }, { status: 400 });
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Vendor User Banao (Role: SELLER)
     const newVendor = await prisma.user.create({
       data: {
         name,
         email,
         password: hashedPassword,
         role: "SELLER",
-        // Shop name ko hum abhi name me hi jod rahe hain ya user model update karna padega
-        // Filhal simple rakhte hain
       },
     });
 
@@ -46,6 +45,7 @@ export async function POST(req: Request) {
   }
 }
 
+// DELETE: Vendor ko remove karo
 export async function DELETE(req: Request) {
   try {
     const { id } = await req.json();
@@ -59,7 +59,8 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ message: "Error deleting vendor" }, { status: 500 });
   }
 }
-// Isse usi file mein dalo jahan GET/POST likha hai
+
+// PATCH: Admin ke zariye status update
 export async function PATCH(req: Request) {
   const session = await getServerSession(authOptions);
   
@@ -75,7 +76,6 @@ export async function PATCH(req: Request) {
     const updatedVendor = await prisma.user.update({
       where: { id: id },
       data: { 
-        // Agar body mein field hai tabhi update karo
         ...(isVerified !== undefined && { isVerified }),
         ...(isBlocked !== undefined && { isBlocked }),
       },
