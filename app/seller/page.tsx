@@ -35,6 +35,13 @@ export default async function SellerDashboard() {
   const totalRevenue = sales
     .filter((sale) => sale.order.status === "DELIVERED") // 👈 Ye filter zaroori hai
     .reduce((sum, item) => sum + (item.price * item.quantity), 0);
+ 
+  // PDF Report ke liye stats prepare karo
+  const sellerReportStats = {
+    totalRevenue: totalRevenue,
+    totalOrders: sales.length,
+    sellerName: session.user?.name // Extra info for PDF
+  };  
 
   return (
     <div className="min-h-screen bg-gray-50 p-8 text-gray-900">
