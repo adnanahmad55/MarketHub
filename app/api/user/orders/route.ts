@@ -3,24 +3,47 @@ import { PrismaClient } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
+// 👈 Pro Tip: Ise ek separate file (lib/prisma.ts) mein rakhna best hai
 const prisma = new PrismaClient();
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
+  try {
+    const session = await getServerSession(authOptions);
 
-  if (!session) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    // 🛡️ Security Check
+    if (!session || !session.user) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    // 🔍 Orders Fetching logic
+    const orders = await prisma.order.findMany({
+      where: { 
+        userId: (session.user as any).id 
+      },
+      include: {
+        items: {
+          include: { 
+            product: {
+              select: {
+                name: true,
+                images: true,
+                price: true,
+                category: true
+              }
+            } 
+          }
+        }
+      },
+      orderBy: { createdAt: "desc" }
+    });
+
+    return NextResponse.json(orders);
+
+  } catch (error: any) {
+    console.error("Fetch Orders Error:", error.message);
+    return NextResponse.json(
+      { message: "Orders load nahi ho paye ❌" }, 
+      { status: 500 }
+    );
   }
-
-  const orders = await prisma.order.findMany({
-    where: { userId: (session.user as any).id },
-    include: {
-      items: {
-        include: { product: true }
-      }
-    },
-    orderBy: { createdAt: "desc" }
-  });
-
-  return NextResponse.json(orders);
 }
