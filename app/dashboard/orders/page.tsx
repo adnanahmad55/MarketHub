@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import OrderStatusDropdown from "@/components/OrderStatusDropdown";
-
+export const dynamic = "force-dynamic";
 const prisma = new PrismaClient();
 
 export default async function OrderManagementPage() {
@@ -38,7 +38,7 @@ export default async function OrderManagementPage() {
                   <p className="text-lg font-black text-gray-900">₹{order.total.toLocaleString()}</p>
                 </td>
                 <td className="p-6 text-right">
-                  <OrderStatusDropdown orderId={order.id} currentStatus={order.status} />
+                 {order.status}
                 </td>
               </tr>
             ))}
