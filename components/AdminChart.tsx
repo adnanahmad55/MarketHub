@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function AdminChart() {
-  const [data, setData] = useState([]);
+  // 👈 Fix 1: State type ko any[] kiya taaki 'never' error na aaye
+  const [data, setData] = useState<any[]>([]); 
 
   useEffect(() => {
     fetch("/api/admin/analytics").then(res => res.json()).then(setData);
@@ -23,7 +24,10 @@ export default function AdminChart() {
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
           <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12, fontWeight: 'bold'}} />
           <YAxis hide />
-          <Tooltip borderStyle={{borderRadius: '12px'}} />
+          {/* 👈 Fix 2: borderStyle ko contentStyle mein badla */}
+          <Tooltip 
+            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} 
+          />
           <Area type="monotone" dataKey="revenue" stroke="#3b82f6" strokeWidth={4} fillOpacity={1} fill="url(#colorRev)" />
         </AreaChart>
       </ResponsiveContainer>
