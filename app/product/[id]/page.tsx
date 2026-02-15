@@ -55,15 +55,19 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
             </div>
 
             {/* Seller Info */}
-            <div className="border-t border-gray-100 pt-6 mb-8">
-              <p className="text-sm text-gray-500 mb-1">Sold by</p>
-              <div className="flex items-center gap-2">
-                <div className="h-8 w-8 bg-gray-200 rounded-full flex items-center justify-center text-xs font-bold">
-                  {product.seller.name.charAt(0)}
-                </div>
-                <p className="font-semibold text-gray-900">{product.seller.name}</p>
-              </div>
-            </div>
+          <div className="border-t border-gray-100 pt-6 mb-8">
+  <p className="text-sm text-gray-500 mb-1">Sold by</p>
+  <div className="flex items-center gap-2">
+    <div className="h-8 w-8 bg-gray-200 rounded-full flex items-center justify-center text-xs font-bold">
+      {/* 👈 Fix 1: Optional chaining use kiya hai */}
+      {product.seller?.name?.charAt(0) || "S"} 
+    </div>
+    <p className="font-semibold text-gray-900">
+      {/* 👈 Fix 2: Fallback name diya hai */}
+      {product.seller?.name || "Unknown Seller"}
+    </p>
+  </div>
+</div>
 
             {/* Action Buttons */}
             <div className="flex gap-4">
