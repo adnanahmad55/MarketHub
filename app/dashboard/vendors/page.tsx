@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 
 export default function VendorsPage() {
-  // 👈 Fix: Yahan <any[]> add kiya hai taaki 'never[]' error na aaye
+ 
   const [vendors, setVendors] = useState<any[]>([]); 
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [loading, setLoading] = useState(false);
@@ -104,7 +104,7 @@ export default function VendorsPage() {
             />
           </div>
           <button disabled={loading} type="submit" className="bg-blue-600 text-white px-8 py-3 rounded-xl hover:bg-blue-700 font-black shadow-lg shadow-blue-100 transition h-[48px]">
-            {loading ? "Adding..." : "+ Add"}
+            {loading ? "Adding..." : "Add"}
           </button>
         </form>
       </div>
